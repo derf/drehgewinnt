@@ -107,10 +107,69 @@ sub check_points {
 	my $top = $py - 3;
 	my $bottom = $py + 3;
 
+	my $dx = $px;
+	my $dy = $py;
+
 	if ($left  < 0) { $left = 0 }
 	if ($right > $owidth) { $right = $owidth }
 	if ($top < 0) { $top = 0 }
 	if ($bottom > $oheight) { $bottom = $oheight }
+
+	for (1 .. 3) {
+		if ($dx > 0 and $dy > 0) {
+			$dx--;
+			$dy--;
+		}
+	}
+	while ($dx <= $owidth and $dy <= $oheight and $dx - $px < 4) {
+		if ($field[$dx][$dy] == 1) {
+			$cnt[0]++;
+			$cnt[1] = 0;
+		}
+		elsif ($field[$dx][$dy] == 2) {
+			$cnt[1]++;
+			$cnt[0] = 0;
+		}
+		else {
+			@cnt = (0) x 2;
+		}
+		for my $p (0 .. 1) {
+			if ($cnt[$p] >= 4) {
+				$points[$p]++;
+			}
+		}
+		$dx++;
+		$dy++;
+	}
+	@cnt = (0) x 2;
+	($dx, $dy) = ($px, $py);
+	for (1 .. 3) {
+		if ($dx > 0 and $dy < $oheight) {
+			$dx--;
+			$dy++;
+		}
+	}
+	while ($dx <= $owidth and $dy >= 0 and $dx - $px < 4) {
+		if ($field[$dx][$dy] == 1) {
+			$cnt[0]++;
+			$cnt[1] = 0;
+		}
+		elsif ($field[$dx][$dy] == 2) {
+			$cnt[1]++;
+			$cnt[0] = 0;
+		}
+		else {
+			@cnt = (0) x 2;
+		}
+		for my $p (0 .. 1) {
+			if ($cnt[$p] >= 4) {
+				$points[$p]++;
+			}
+		}
+		$dx++;
+		$dy--;
+	}
+	@cnt = (0) x 2;
 
 	for my $x ($left .. $right) {
 		if ($field[$x][$py] == 1) {
