@@ -133,6 +133,28 @@ sub add_stone {
 	return 0;
 }
 
+sub count_field {
+	my ( $x, $y, $cnt ) = @_;
+
+	if ( $field[$x][$y] == 1 ) {
+		$cnt->[0]++;
+		$cnt->[1] = 0;
+	}
+	elsif ( $field[$x][$y] == 2 ) {
+		$cnt->[1]++;
+		$cnt->[0] = 0;
+	}
+	else {
+		$cnt = [ (0) x 2 ];
+	}
+	for my $p ( 0 .. 1 ) {
+		if ( $cnt->[$p] >= 4 ) {
+			$points[$p]++;
+		}
+	}
+	return;
+}
+
 sub check_points {
 	my ( $px, $py ) = @_;
 	my @cnt = (0) x 2;
@@ -157,22 +179,7 @@ sub check_points {
 		}
 	}
 	while ( $dx <= $owidth and $dy <= $oheight and $dx - $px < 4 ) {
-		if ( $field[$dx][$dy] == 1 ) {
-			$cnt[0]++;
-			$cnt[1] = 0;
-		}
-		elsif ( $field[$dx][$dy] == 2 ) {
-			$cnt[1]++;
-			$cnt[0] = 0;
-		}
-		else {
-			@cnt = (0) x 2;
-		}
-		for my $p ( 0 .. 1 ) {
-			if ( $cnt[$p] >= 4 ) {
-				$points[$p]++;
-			}
-		}
+		count_field( $dx, $dy, \@cnt );
 		$dx++;
 		$dy++;
 	}
@@ -185,63 +192,19 @@ sub check_points {
 		}
 	}
 	while ( $dx <= $owidth and $dy >= 0 and $dx - $px < 4 ) {
-		if ( $field[$dx][$dy] == 1 ) {
-			$cnt[0]++;
-			$cnt[1] = 0;
-		}
-		elsif ( $field[$dx][$dy] == 2 ) {
-			$cnt[1]++;
-			$cnt[0] = 0;
-		}
-		else {
-			@cnt = (0) x 2;
-		}
-		for my $p ( 0 .. 1 ) {
-			if ( $cnt[$p] >= 4 ) {
-				$points[$p]++;
-			}
-		}
+		count_field( $dx, $dy, \@cnt );
 		$dx++;
 		$dy--;
 	}
-	@cnt = (0) x 2;
 
+	@cnt = (0) x 2;
 	for my $x ( $left .. $right ) {
-		if ( $field[$x][$py] == 1 ) {
-			$cnt[0]++;
-			$cnt[1] = 0;
-		}
-		elsif ( $field[$x][$py] == 2 ) {
-			$cnt[1]++;
-			$cnt[0] = 0;
-		}
-		else {
-			@cnt = (0) x 2;
-		}
-		for my $p ( 0 .. 1 ) {
-			if ( $cnt[$p] >= 4 ) {
-				$points[$p]++;
-			}
-		}
+		count_field( $x, $py, \@cnt );
 	}
+
 	@cnt = (0) x 2;
 	for my $y ( $top .. $bottom ) {
-		if ( $field[$px][$y] == 1 ) {
-			$cnt[0]++;
-			$cnt[1] = 0;
-		}
-		elsif ( $field[$px][$y] == 2 ) {
-			$cnt[1]++;
-			$cnt[0] = 0;
-		}
-		else {
-			@cnt = (0) x 2;
-		}
-		for my $p ( 0 .. 1 ) {
-			if ( $cnt[$p] >= 4 ) {
-				$points[$p]++;
-			}
-		}
+		count_field( $px, $y, \@cnt );
 	}
 
 	return;
