@@ -8,6 +8,7 @@ use Term::ReadKey;
 our $VERSION = '0.0';
 
 my @field;
+my @points;
 my $pcur = 1;
 my $ppos = 0;
 my $owidth = 6;
@@ -30,7 +31,12 @@ sub draw_game {
 	for my $x (0 .. $owidth) {
 		print q{ };
 		if ($x == $ppos) {
-			draw_field($pcur, '▼');
+			if ($field[$ppos][0] == 0) {
+				draw_field($pcur, '▼');
+			}
+			else {
+				draw_field($pcur, '▽');
+			}
 		}
 		else {
 			print q{ };
@@ -63,6 +69,11 @@ sub draw_game {
 		print '┴─';
 	}
 	print "┘\n";
+	printf("Score: %s%3d %s%3d%s\n\n",
+		q{}, $points[0],
+		"\e[0;31m", $points[1],
+		"\e[0;m"
+	);
 }
 
 sub ini_game {
@@ -71,6 +82,7 @@ sub ini_game {
 			$field[$i][$j] = 0;
 		}
 	}
+	@points = (0) x 2;
 }
 
 sub add_stone {
@@ -79,7 +91,62 @@ sub add_stone {
 	for my $y (0 .. $oheight) {
 		if ($field[$x][$oheight - $y] == 0) {
 			$field[$x][$oheight - $y] = $player;
-			return;
+			check_points($x, $oheight - $y);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub check_points {
+	my ($px, $py) = @_;
+	my @cnt = (0) x 2;
+
+	my $left = $px - 3;
+	my $right = $px + 3;
+	my $top = $py - 3;
+	my $bottom = $py + 3;
+
+	if ($left  < 0) { $left = 0 }
+	if ($right > $owidth) { $right = $owidth }
+	if ($top < 0) { $top = 0 }
+	if ($bottom > $oheight) { $bottom = $oheight }
+
+	for my $x ($left .. $right) {
+		if ($field[$x][$py] == 1) {
+			$cnt[0]++;
+			$cnt[1] = 0;
+		}
+		elsif ($field[$x][$py] == 2) {
+			$cnt[1]++;
+			$cnt[0] = 0;
+		}
+		else {
+			@cnt = (0) x 2;
+		}
+		for my $p (0 .. 1) {
+			if ($cnt[$p] >= 4) {
+				$points[$p]++;
+			}
+		}
+	}
+	@cnt = (0) x 2;
+	for my $y ($top .. $bottom) {
+		if ($field[$px][$y] == 1) {
+			$cnt[0]++;
+			$cnt[1] = 0;
+		}
+		elsif ($field[$px][$y] == 2) {
+			$cnt[1]++;
+			$cnt[0] = 0;
+		}
+		else {
+			@cnt = (0) x 2;
+		}
+		for my $p (0 .. 1) {
+			if ($cnt[$p] >= 4) {
+				$points[$p]++;
+			}
 		}
 	}
 }
@@ -96,8 +163,9 @@ while (my $key = ReadKey(0)) {
 		$ppos = ($ppos + 1) % ($owidth + 1);
 	}
 	elsif ($key eq 'B') {
-		add_stone($ppos, $pcur);
-		$pcur = (!($pcur - 1)) + 1;
+		if (add_stone($ppos, $pcur)) {
+			$pcur = (!($pcur - 1)) + 1;
+		}
 	}
 	if ($key eq 'q') {
 		ReadMode(0);
