@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use 5.010;
+use Getopt::Std;
 use Term::ReadKey;
 
 our $VERSION = '0.0';
@@ -13,6 +14,16 @@ my $pcur    = 1;
 my $ppos    = 0;
 my $owidth  = 6;
 my $oheight = 5;
+
+my @info_lines = (
+	sub {
+		return 'score';
+	},
+	sub {
+		return sprintf( '%s%-3d %s%-3d%s',
+			"\e[1m", $points[0], "\e[31m", $points[1], "\e[0m" );
+	},
+);
 
 sub draw_field {
 	my ( $field, $char ) = @_;
@@ -50,33 +61,55 @@ sub draw_game {
 			for ( 1 .. $owidth ) {
 				print '┬─';
 			}
-			print "┐\n";
+			print '┐';
 		}
 		else {
 			print '├─';
 			for ( 1 .. $owidth ) {
 				print '┼─';
 			}
-			print "┤\n";
+			print '┤';
 		}
+		if ( defined $info_lines[ $y * 2 ] ) {
+			print q{    } . &{ $info_lines[ $y * 2 ] };
+		}
+		print "\n";
 		for my $x ( 0 .. $owidth ) {
 			print q{│};
 			draw_field( $field[$x][$y] );
 		}
-		print "│\n";
+		print '│';
+		if ( defined $info_lines[ $y * 2 + 1 ] ) {
+			print q{    } . &{ $info_lines[ $y * 2 + 1 ] };
+		}
+		print "\n";
 	}
 	print '└─';
 	for ( 1 .. $owidth ) {
 		print '┴─';
 	}
 	print "┘\n";
-	printf( "Score: %s%3d %s%3d%s\n\n",
-		q{}, $points[0], "\e[0;31m", $points[1], "\e[0;m" );
 
 	return;
 }
 
 sub ini_game {
+	my %opts;
+	getopts( 'h:w:', \%opts );
+
+	if ( $opts{h} ) {
+		$oheight = $opts{h} - 1;
+		if ( $oheight < 3 ) {
+			die("Setting height < 4 does not make sense (noone can win)\n");
+		}
+	}
+	if ( $opts{w} ) {
+		$owidth = $opts{w} - 1;
+		if ( $owidth < 3 ) {
+			die("Setting width < 4 does not make sense (noone can win)\n");
+		}
+	}
+
 	for my $i ( 0 .. $owidth ) {
 		for my $j ( 0 .. $oheight ) {
 			$field[$i][$j] = 0;
