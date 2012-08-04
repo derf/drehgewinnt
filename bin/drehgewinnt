@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use 5.010;
+use Clone qw(clone);
 use Getopt::Std;
 use Term::ReadKey;
 
@@ -93,6 +94,16 @@ sub draw_game {
 	return;
 }
 
+sub ini_field {
+	@points = (0) x 2;
+	for my $x ( 0 .. $owidth ) {
+		for my $y ( 0 .. $oheight ) {
+			$field[$x][$y] = 0;
+		}
+	}
+	return;
+}
+
 sub ini_game {
 	my %opts;
 	getopts( 'h:w:', \%opts );
@@ -110,18 +121,17 @@ sub ini_game {
 		}
 	}
 
-	for my $i ( 0 .. $owidth ) {
-		for my $j ( 0 .. $oheight ) {
-			$field[$i][$j] = 0;
-		}
-	}
-	@points = (0) x 2;
+	ini_field();
 
 	return;
 }
 
 sub add_stone {
 	my ( $x, $player ) = @_;
+
+	if ( $player == 0 ) {
+		return 0;
+	}
 
 	for my $y ( 0 .. $oheight ) {
 		if ( $field[$x][ $oheight - $y ] == 0 ) {
@@ -131,6 +141,21 @@ sub add_stone {
 		}
 	}
 	return 0;
+}
+
+sub rotate {
+	my @tmp_field = @{ clone( \@field ) };
+	my $tmp       = $owidth;
+	$owidth  = $oheight;
+	$oheight = $tmp;
+	ini_field();
+
+	for my $x ( 0 .. $oheight ) {
+		for my $y ( 0 .. $owidth ) {
+			add_stone( $owidth - $y, $tmp_field[ $oheight - $x ][$y] );
+		}
+	}
+	return;
 }
 
 sub count_field {
@@ -226,6 +251,9 @@ while ( my $key = ReadKey(0) ) {
 			if ( add_stone( $ppos, $pcur ) ) {
 				$pcur = ( !( $pcur - 1 ) ) + 1;
 			}
+		}
+		when ('r') {
+			rotate();
 		}
 		when ('q') {
 			ReadMode(0);
