@@ -15,6 +15,8 @@ my $pcur    = 1;
 my $ppos    = 0;
 my $owidth  = 6;
 my $oheight = 5;
+my $rotate  = 0;
+my $turn    = 0;
 
 my @info_lines = (
 	sub {
@@ -23,6 +25,26 @@ my @info_lines = (
 	sub {
 		return sprintf( '%s%-3d %s%-3d%s',
 			"\e[1m", $points[0], "\e[31m", $points[1], "\e[0m" );
+	},
+	undef,
+	sub {
+		if ($rotate) {
+			return 'next rotation';
+		}
+		return q{};
+	},
+	sub {
+		if ( $rotate >= 1 ) {
+			my $rot_delta = $rotate - ( $turn % $rotate );
+			if ( $rot_delta == 1 ) {
+				return "after \e[1mthis\e[0m turn";
+			}
+			return sprintf( 'in %s%d%s turns', "\e[1m", $rot_delta, "\e[0m" );
+		}
+		elsif ( $rotate > 0 ) {
+			return sprintf( 'probability %s%02.f%%%s',
+				"\e[1m", $rotate * 100, "\e[0m" );
+		}
 	},
 );
 
@@ -106,7 +128,7 @@ sub ini_field {
 
 sub ini_game {
 	my %opts;
-	getopts( 'h:w:', \%opts );
+	getopts( 'h:r:w:', \%opts );
 
 	if ( $opts{h} ) {
 		$oheight = $opts{h} - 1;
@@ -118,6 +140,12 @@ sub ini_game {
 		$owidth = $opts{w} - 1;
 		if ( $owidth < 3 ) {
 			die("Setting width < 4 does not make sense (noone can win)\n");
+		}
+	}
+	if ( $opts{r} ) {
+		$rotate = $opts{r};
+		if ( $rotate < 0 ) {
+			die("Cannot set negative rotate\n");
 		}
 	}
 
@@ -249,6 +277,15 @@ while ( my $key = ReadKey(0) ) {
 		}
 		when ('B') {
 			if ( add_stone( $ppos, $pcur ) ) {
+				$turn++;
+				if ( $rotate >= 1 ) {
+					if ( ( $turn % $rotate ) == 0 ) {
+						rotate();
+					}
+				}
+				elsif ( $rotate > 0 and ( rand() <= $rotate ) ) {
+					rotate();
+				}
 				$pcur = ( !( $pcur - 1 ) ) + 1;
 			}
 		}
