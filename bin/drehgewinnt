@@ -198,7 +198,7 @@ sub count_field {
 		$cnt->[0] = 0;
 	}
 	else {
-		$cnt = [ (0) x 2 ];
+		$cnt = [ 0, 0 ];
 	}
 	for my $p ( 0 .. 1 ) {
 		if ( $cnt->[$p] >= 4 ) {
